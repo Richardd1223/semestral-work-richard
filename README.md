@@ -1,1 +1,2 @@
 # semestral-work-richard
+
