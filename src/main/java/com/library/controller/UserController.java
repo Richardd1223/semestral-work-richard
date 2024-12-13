@@ -5,6 +5,7 @@ import com.library.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Optional;
 
 import java.util.List;
 
@@ -36,6 +37,32 @@ public class UserController {
         }
         return ResponseEntity.ok(user);
     }
+
+    // Delete a user by ID
+    @DeleteMapping("/delete/{id}")
+    public String deleteUser(@PathVariable Long id) {
+        userRepository.deleteById(id);
+        return "User deleted successfully!";
+    }
+
+    // Update user information
+    @PutMapping("/edit/{id}")
+    public String editUser(@PathVariable Long id, @RequestBody User updatedUser) {
+        User existingUser = userRepository.findById(id).orElse(null);
+
+        if (existingUser == null) {
+            return "User not found!";
+        }
+
+        existingUser.setName(updatedUser.getName());
+        existingUser.setPassword(updatedUser.getPassword());
+        existingUser.setRole(updatedUser.getRole());
+
+        userRepository.save(existingUser);
+        return "User updated successfully!";
+    }
+
+
 
     @GetMapping("/all")
     public ResponseEntity<List<User>> getAllUsers() {

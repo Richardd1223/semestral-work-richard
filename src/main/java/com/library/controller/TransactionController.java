@@ -8,7 +8,7 @@ import com.library.repository.TransactionRepository;
 import com.library.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
+import java.util.List;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -57,6 +57,12 @@ public class TransactionController {
             return "Return transaction logged successfully!";
         }
         return "Book or User not found!";
+    }
+
+    // Endpoint to fetch all transactions
+    @GetMapping("/all")
+    public List<Transaction> getAllTransactions() {
+        return transactionRepository.findAll();
     }
 }
 

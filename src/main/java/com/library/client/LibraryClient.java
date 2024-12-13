@@ -4,7 +4,7 @@ import com.library.model.Book;
 import com.library.model.User;
 import com.library.model.User.Role;
 import org.springframework.web.client.RestTemplate;
-
+import com.library.model.Transaction;
 import java.util.Scanner;
 
 public class LibraryClient {
@@ -95,9 +95,13 @@ public class LibraryClient {
             System.out.println("1. Add a Book");
             System.out.println("2. View All Books");
             System.out.println("3. Delete a Book");
-            System.out.println("4. Register a New User");
-            System.out.println("5. View Users");
-            System.out.println("6. Logout");
+            System.out.println("4. Edit a Book");
+            System.out.println("5. Register a New User");
+            System.out.println("6. View Users");
+            System.out.println("7. Delete a User");
+            System.out.println("8. Edit a User");
+            System.out.println("9. View Transactions");
+            System.out.println("10. Logout");
             System.out.print("Enter your choice: ");
             int choice = scanner.nextInt();
             scanner.nextLine(); // consume the newline character
@@ -106,14 +110,124 @@ public class LibraryClient {
                 case 1 -> addBook();
                 case 2 -> viewBooks();
                 case 3 -> deleteBook();
-                case 4 -> registerNewUser(); // Option to register new user
-                case 5 -> viewUsers();
-                case 6 -> {
+                case 4 -> editBook();
+                case 5 -> registerUser();
+                case 6 -> viewUsers();
+                case 7 -> deleteUser();
+                case 8 -> editUser();
+                case 9 -> viewTransactions();
+                case 10 -> {
                     System.out.println("Logging out...");
                     return;
                 }
                 default -> System.out.println("Invalid choice. Please try again.");
             }
+        }
+    }
+
+    private void viewTransactions() {
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            Transaction[] transactions = restTemplate.getForObject("http://localhost:8000/transactions/all", Transaction[].class);
+            System.out.println("Transaction Records:");
+            if (transactions != null && transactions.length > 0) {
+                for (Transaction transaction : transactions) {
+                    System.out.println(transaction);
+                }
+            } else {
+                System.out.println("No transactions found.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error retrieving transactions: " + e.getMessage());
+        }
+    }
+
+    private void deleteUser() {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the user ID to delete: ");
+        Long userId = scanner.nextLong();
+
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            restTemplate.delete("http://localhost:8000/users/delete/" + userId);
+            System.out.println("User deleted successfully.");
+        } catch (Exception e) {
+            System.out.println("Error deleting user: " + e.getMessage());
+        }
+    }
+
+    private void editUser() {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the user ID to edit: ");
+        Long userId = scanner.nextLong();
+        scanner.nextLine(); // consume the newline character
+
+        System.out.print("Enter new name: ");
+        String name = scanner.nextLine();
+
+        System.out.print("Enter new password: ");
+        String password = scanner.nextLine();
+
+        System.out.print("Enter new role (ADMIN/STUDENT): ");
+        String roleInput = scanner.nextLine();
+
+        User.Role role;
+        try {
+            role = User.Role.valueOf(roleInput.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            System.out.println("Invalid role. Please enter ADMIN or STUDENT.");
+            return;
+        }
+
+        User updatedUser = new User(name, password, role);
+
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            // Use PUT to send the updated user details
+            restTemplate.put(USER_BASE_URL + "/edit/" + userId, updatedUser);
+            System.out.println("User updated successfully!");
+        } catch (Exception e) {
+            System.out.println("Error editing user: " + e.getMessage());
+        }
+    }
+
+    private void editBook() {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the book ID to edit: ");
+        Long bookId = scanner.nextLong();
+        scanner.nextLine(); // consume the newline character
+
+        System.out.print("Enter new title: ");
+        String title = scanner.nextLine();
+
+        System.out.print("Enter new author: ");
+        String author = scanner.nextLine();
+
+        System.out.print("Enter new status (AVAILABLE/BORROWED): ");
+        String statusInput = scanner.nextLine();
+
+        Book.Status status;
+        try {
+            status = Book.Status.valueOf(statusInput.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            System.out.println("Invalid status. Please enter AVAILABLE or BORROWED.");
+            return;
+        }
+
+        Book updatedBook = new Book();
+        updatedBook.setTitle(title);
+        updatedBook.setAuthor(author);
+        updatedBook.setStatus(status);
+
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            restTemplate.put(BOOK_BASE_URL + "/edit/" + bookId, updatedBook);
+            System.out.println("Book updated successfully!");
+        } catch (Exception e) {
+            System.out.println("Error editing book: " + e.getMessage());
         }
     }
 
@@ -141,28 +255,6 @@ public class LibraryClient {
                 }
                 default -> System.out.println("Invalid choice. Please try again.");
             }
-        }
-    }
-
-    // Register a new user as admin
-    private void registerNewUser() {
-        Scanner scanner = new Scanner(System.in);
-
-        System.out.print("Enter your name: ");
-        String name = scanner.nextLine();
-
-        System.out.print("Enter your password: ");
-        String password = scanner.nextLine();
-
-        // Removed role input, will always be STUDENT
-        User user = new User(name, password, User.Role.STUDENT);
-
-        RestTemplate restTemplate = new RestTemplate();
-        try {
-            String response = restTemplate.postForObject(USER_BASE_URL + "/register", user, String.class);
-            System.out.println(response);
-        } catch (Exception e) {
-            System.out.println("Error registering user: " + e.getMessage());
         }
     }
 

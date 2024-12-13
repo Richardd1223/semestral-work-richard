@@ -139,5 +139,21 @@ public class BookController {
         }
         return borrowedBooks; // Return the filtered list of borrowed books
     }
+    // Update a book by ID
+    @PutMapping("/edit/{id}")
+    public ResponseEntity<String> editBook(@PathVariable Long id, @RequestBody Book updatedBook) {
+        Optional<Book> bookOptional = bookRepository.findById(id);
 
+        if (bookOptional.isPresent()) {
+            Book book = bookOptional.get();
+            book.setTitle(updatedBook.getTitle());
+            book.setAuthor(updatedBook.getAuthor());
+            book.setStatus(updatedBook.getStatus());
+            bookRepository.save(book);
+            return ResponseEntity.ok("Book updated successfully!");
+        } else {
+            return ResponseEntity.badRequest().body("Book not found!");
+        }
+    }
 }
+
